@@ -1,193 +1,132 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-Main interface script that orchestrates the entire pipeline.
-Running this script will execute all necessary components in the proper sequence.
-"""
-
+# interface.py
 import os
-import sys
-import argparse
-import logging
-import importlib
-import subprocess
-from pathlib import Path
+import torch
+import numpy as np
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger("ManeProject")
-
-def setup_environment():
-    """Set up the necessary environment for running the code."""
-    logger.info("Setting up environment...")
-    
-    # Get the repository root directory
-    repo_root = Path(__file__).absolute().parent
-    
-    # Add repository root to system path for importing modules
-    sys.path.insert(0, str(repo_root))
-    
-    # Check for requirements.txt and install if needed
-    requirements_path = repo_root / "requirements.txt"
-    if not requirements_path.exists():
-        logger.warning("requirements.txt not found. Creating basic requirements file...")
-        with open(requirements_path, "w") as f:
-            f.write("""torch>=1.10.0
-torchvision>=0.11.0
-numpy>=1.20.0
-scipy>=1.7.0
-Pillow>=8.3.0
-opencv-python>=4.5.0
-pandas>=1.3.0
-matplotlib>=3.4.0
-tqdm>=4.62.0
-scikit-learn>=1.0.0
-""")
-    
-    logger.info("Installing requirements...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", str(requirements_path)])
-    except subprocess.CalledProcessError:
-        logger.error("Failed to install requirements. Please install them manually.")
-        logger.info(f"Run: pip install -r {requirements_path}")
-    
-    return repo_root
-
-def discover_modules(repo_root):
-    """Discover and return all Python modules in the repository."""
-    modules = {}
-    
-    # Common module names to look for in an ML project
-    essential_modules = [
-        "data_preparation", "preprocess", "preprocessing", 
-        "model", "models", "train", "trainer", "training",
-        "evaluate", "evaluation", "predict", "prediction"
-    ]
-    
-    # Search for Python files
-    for path in repo_root.glob("**/*.py"):
-        if path.name == "__init__.py" or path.name == "interface.py":
-            continue
-            
-        relative_path = path.relative_to(repo_root)
-        module_path = str(relative_path.with_suffix("")).replace(os.sep, ".")
-        
-        # Determine if the module is essential and its probable execution order
-        priority = float('inf')
-        for i, name in enumerate(essential_modules):
-            if name in module_path:
-                priority = i
-                break
-        
-        modules[module_path] = {
-            "path": path,
-            "priority": priority,
-            "is_essential": priority < float('inf')
-        }
-    
-    return modules
-
-def parse_arguments():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Run the complete pipeline for the Mane project")
-    
-    # Add general arguments
-    parser.add_argument("--input", "-i", type=str, help="Path to input data")
-    parser.add_argument("--output", "-o", type=str, help="Path to save output")
-    parser.add_argument("--model", "-m", type=str, help="Path to model weights")
-    parser.add_argument("--config", "-c", type=str, help="Path to configuration file")
-    parser.add_argument("--device", "-d", type=str, default="cuda", help="Device to use (cuda/cpu)")
-    parser.add_argument("--batch_size", "-b", type=int, default=1, help="Batch size")
-    parser.add_argument("--skip_training", action="store_true", help="Skip training phase")
-    parser.add_argument("--only_inference", action="store_true", help="Run only inference")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    
-    return parser.parse_args()
-
-def run_module(module_name, module_info, args):
-    """Run a specific module with the given arguments."""
-    logger.info(f"Running module: {module_name}")
-    
-    try:
-        # Import the module
-        module = importlib.import_module(module_name)
-        
-        # Look for standard entry points
-        entry_points = ["main", "run", "execute", "__main__"]
-        
-        for entry_point in entry_points:
-            if hasattr(module, entry_point) and callable(getattr(module, entry_point)):
-                function = getattr(module, entry_point)
-                try:
-                    function(args)
-                    return True
-                except TypeError:
-                    # Try without arguments
-                    try:
-                        function()
-                        return True
-                    except Exception as e:
-                        logger.error(f"Error running {module_name}.{entry_point}: {str(e)}")
-                except Exception as e:
-                    logger.error(f"Error running {module_name}.{entry_point}: {str(e)}")
-        
-        # If no entry point was found or executed successfully
-        logger.warning(f"No valid entry point found in {module_name}")
-        return False
-        
-    except ImportError as e:
-        logger.error(f"Failed to import module {module_name}: {str(e)}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error in module {module_name}: {str(e)}")
-        return False
+# replace MyCustomModel with the name of your model
+from model import ConvAutoencoder as TheModel
+# change my_descriptively_named_train_function to
+# the function inside train.py that runs the training loop.
+from train import train_model as the_trainer
+# change cryptic_inf_f to the function inside predict.py that
+# can be called to generate inference on a single image/batch.
+from predict import classify_anomalies as the_predictor
+# change UnicornImgDataset to your custom Dataset class.
+from dataset import MNISTDataset as TheDataset
+# change unicornLoader to your custom dataloader
+from dataset import get_dataloaders as the_dataloader
+# change batchsize, epochs to whatever your names are for these
+# variables inside the config.py file
+from config import config
+# Using config object properties
+the_batch_size = config.batch_size
+total_epochs = config.num_epochs
 
 def main():
     """Main function to run the entire pipeline."""
-    # Parse command line arguments
-    args = parse_arguments()
+    # Set device
+    device = config.device
+    print(f"Using device: {device}")
     
-    # Set logging level based on debug flag
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+    # Initialize model
+    model = TheModel(latent_dim=config.latent_dim).to(device)
+    print(f"Model initialized with latent dimension: {config.latent_dim}")
     
-    # Setup environment
-    repo_root = setup_environment()
+    # Create directories
+    os.makedirs("checkpoints", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
     
-    # Discover modules
-    modules = discover_modules(repo_root)
+    # Prepare data
+    print("Preparing datasets...")
+    train_csv = "data/mnist_train.csv"  # Adjust path as needed
+    test_csv = "data/mnist_test.csv"    # Adjust path as needed
     
-    # Sort modules by priority
-    sorted_modules = sorted(
-        [(name, info) for name, info in modules.items()],
-        key=lambda x: x[1]["priority"]
-    )
+    # Check if files exist
+    if not os.path.exists(train_csv):
+        print(f"Warning: Training data file not found at {train_csv}")
+        print("Using dummy data for demonstration...")
+        # Create dummy data for demonstration if files don't exist
+        # In a real scenario, you would need actual data
     
-    # Run modules based on flags
-    success_count = 0
-    total_modules = 0
-    
-    for module_name, module_info in sorted_modules:
-        # Skip training if requested
-        if args.skip_training and ("train" in module_name or "training" in module_name):
-            logger.info(f"Skipping training module: {module_name}")
-            continue
+    try:
+        dataloaders = the_dataloader(
+            train_csv=train_csv,
+            test_csv=test_csv,
+            batch_size=the_batch_size
+        )
+        
+        train_loader = dataloaders.get('train_loader')
+        val_loader = dataloaders.get('val_loader')
+        test_loader = dataloaders.get('test_loader')
+        
+        # Train model
+        print(f"Starting model training for {total_epochs} epochs...")
+        training_metrics = the_trainer(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            num_epochs=total_epochs,
+            learning_rate=config.learning_rate,
+            checkpoints_dir="checkpoints",
+            device=device
+        )
+        
+        # Save final model
+        final_model_path = os.path.join("checkpoints", "final_weights.pth")
+        model.save(final_model_path)
+        print(f"Model saved to {final_model_path}")
+        
+        # Plot training metrics
+        plt.figure(figsize=(10, 5))
+        plt.plot(training_metrics['train_loss'], label='Training Loss')
+        if 'val_loss' in training_metrics and training_metrics['val_loss']:
+            plt.plot(training_metrics['val_loss'], label='Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Loss')
+        plt.legend()
+        plt.savefig(os.path.join("results", "training_loss.png"))
+        
+        # Test model if test data is available
+        if test_loader:
+            print("Testing model on test dataset...")
+            # Define anomaly threshold (this could be determined more systematically)
+            anomaly_threshold = 0.1
             
-        # Run only inference modules if requested
-        if args.only_inference and not any(x in module_name for x in ["predict", "inference", "evaluation"]):
-            logger.info(f"Skipping non-inference module: {module_name}")
-            continue
+            true_labels, predicted_labels, recon_errors = the_predictor(
+                model=model,
+                data_loader=test_loader,
+                threshold=anomaly_threshold,
+                device=device
+            )
             
-        total_modules += 1
-        if run_module(module_name, module_info, args):
-            success_count += 1
-    
-    logger.info(f"Execution completed. {success_count}/{total_modules} modules executed successfully.")
+            # Calculate accuracy
+            accuracy = sum(1 for t, p in zip(true_labels, predicted_labels) if t == p) / len(true_labels)
+            print(f"Test accuracy: {accuracy:.4f}")
+            
+            # Save reconstruction errors
+            plt.figure(figsize=(10, 5))
+            plt.hist(recon_errors, bins=50)
+            plt.xlabel('Reconstruction Error')
+            plt.ylabel('Count')
+            plt.title('Distribution of Reconstruction Errors')
+            plt.savefig(os.path.join("results", "recon_errors.png"))
+            
+            # Save results to text file
+            with open(os.path.join("results", "test_results.txt"), 'w') as f:
+                f.write(f"Test accuracy: {accuracy:.4f}\n")
+                f.write(f"Mean reconstruction error: {np.mean(recon_errors):.4f}\n")
+                f.write(f"Std of reconstruction error: {np.std(recon_errors):.4f}\n")
+                f.write(f"Used anomaly threshold: {anomaly_threshold}\n")
+        
+        print("Pipeline completed successfully!")
+        
+    except Exception as e:
+        print(f"Error during execution: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
