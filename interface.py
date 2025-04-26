@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Main inference script that orchestrates the entire pipeline.
+Main interface script that orchestrates the entire pipeline.
 Running this script will execute all necessary components in the proper sequence.
 """
 
@@ -71,7 +71,7 @@ def discover_modules(repo_root):
     
     # Search for Python files
     for path in repo_root.glob("**/*.py"):
-        if path.name == "__init__.py" or path.name == "inference.py":
+        if path.name == "__init__.py" or path.name == "interface.py":
             continue
             
         relative_path = path.relative_to(repo_root)
