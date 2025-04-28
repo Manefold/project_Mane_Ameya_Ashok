@@ -40,7 +40,10 @@ project_<student_full_name>/
 2. Create a virtual environment (optional but recommended):
 
    ```bash
+   python3 -venv venv
+   or
    python -m venv venv
+   
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
@@ -55,6 +58,8 @@ project_<student_full_name>/
 To train the model and perform anomaly detection:
 
 ```bash
+python3 interface.py
+or
 python interface.py
 ```
 
