@@ -1,69 +1,79 @@
-# project_Mane_Ameya_Ashok
-Roll No.20211017 
-# Anomaly Detection Using Autoencoders on MNIST
+# MNIST Anomaly Detection with PyTorch Autoencoder
 
-## Project Overview
-This project implements anomaly detection using convolutional autoencoders and variational autoencoders (VAEs) on the MNIST dataset. The system is designed to detect anomalies by learning the distribution of normal data and identifying samples that deviate significantly from this learned distribution.
+This project implements an anomaly detection system using a PyTorch autoencoder trained on the MNIST dataset. It follows the structure outlined in the [Medium tutorial by Benjamin](https://benjoe.medium.com/anomaly-detection-using-pytorch-autoencoder-and-mnist-31c5c2186329).
 
-## Model Architecture
-The project implements two deep learning models:
-- **Convolutional Autoencoder**: A traditional autoencoder that encodes input images to a lower-dimensional latent space and then reconstructs them.
-- **Variational Autoencoder (VAE)**: A probabilistic autoencoder that encodes inputs to a distribution in latent space, providing better generalization and representation learning.
+## 📁 Project Structure
 
-Both models use the reconstruction error as the anomaly score, where higher reconstruction error indicates a higher likelihood of anomaly.
+```
+project_<student_full_name>/
+├── checkpoints/
+│   └── final_weights.pth
+├── data/
+│   ├── mnist_train.csv
+│   └── anom.csv
+├── dataset.py
+├── model.py
+├── train.py
+├── predict.py
+├── config.py
+├── interface.py
+├── requirements.txt
+└── README.md
+```
 
-## Dataset
-The project uses the MNIST dataset in CSV format:
-- Download the dataset from [Kaggle](https://www.kaggle.com/datasets/oddrationale/mnist-in-csv?select=mnist_train.csv)
-- Extract the downloaded files to the project directory
-- The main training file (`mnist_train.csv`) needs to be unzipped before use
+## 🚀 Getting Started
 
-## Installation
+### Prerequisites
 
-### Requirements
+- Python 3.7 or higher
+- pip
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/project_<student_full_name>.git
+   cd project_<student_full_name>
+   ```
+
+2. Create a virtual environment (optional but recommended):
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install the required packages:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## 🧠 Usage
+
+To train the model and perform anomaly detection:
+
 ```bash
-pip install -r requirements.txt
+python interface.py
 ```
 
-### Project Structure
-- `config.py`: Configuration settings for the model and training
-- `dataset.py`: Dataset classes and data loading utilities
-- `model.py`: Implementations of autoencoder and VAE models
-- `train.py`: Training loop and procedures
-- `predict.py`: Inference and anomaly classification
-- `logger.py`: Logging utilities
-- `interface.py`: User interface for running the complete pipeline
+This will:
+* Train the autoencoder on the MNIST training data.
+* Save the trained model weights to `checkpoints/final_weights.pth`.
+* Evaluate the model on the anomaly dataset.
+* Output performance metrics such as Accuracy and AUC.
 
-## Usage
+## 📊 Outputs
 
-### Training
-```bash
-python interface.py --input path/to/mnist_train.csv --output path/to/save/results
-```
+* **Model Weights**: Saved in `checkpoints/final_weights.pth`.
+* **Performance Metrics**: Displayed in the console after evaluation.
 
-### Inference Only
-```bash
-python interface.py --input path/to/test_data.csv --only_inference --model path/to/saved/model
-```
+## 📝 Notes
 
-### Additional Options
-- `--skip_training`: Skip the training phase
-- `--device`: Specify computing device (cuda/cpu)
-- `--batch_size`: Set batch size for training and inference
-- `--debug`: Enable debug mode for verbose output
+* Ensure that the `data/` directory contains the `mnist_train.csv` and `anom.csv` files.
+* The `config.py` file contains configurable parameters such as learning rate, batch size, and number of epochs.
 
-## Anomaly Detection Process
-1. The autoencoder learns to reconstruct normal (non-anomalous) samples during training
-2. During inference, samples with high reconstruction error are classified as anomalies
-3. A threshold parameter determines the cutoff for anomaly classification
+## 📄 License
 
-## Notes
-- `anom.csv` is an example dataset created by adding noise to the MNIST test data
-- The code includes utilities for adding controlled noise to images to simulate anomalies
-- All hyperparameters are configurable through the `config.py` file
-
-## Citation
-```
-The MNIST dataset used in this project was obtained from:
-https://www.kaggle.com/datasets/oddrationale/mnist-in-csv?select=mnist_train.csv
-```
+This project is licensed under the MIT License - see the LICENSE file for details.
