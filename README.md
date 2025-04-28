@@ -33,8 +33,8 @@ project_<student_full_name>/
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/project_<Mane_Ameya_Ashok>.git
-   cd project_<Mane_Ameya_Ashok>
+   git clone https://github.com/Manefold/project_Mane_Ameya_Ashok.git
+   cd project_Mane_Ameya_Ashok
    ```
 
 2. Create a virtual environment (optional but recommended):
