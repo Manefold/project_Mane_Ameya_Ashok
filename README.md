@@ -36,8 +36,8 @@ project_<student_full_name>/
    git clone https://github.com/Manefold/project_Mane_Ameya_Ashok.git
    cd project_Mane_Ameya_Ashok
    ```
-
-2. Create a virtual environment (optional but recommended):
+2. Unzip the mnist_train.csv (important)
+3. Create a virtual environment (optional but recommended):
 
    ```bash
    python3 -venv venv
@@ -47,7 +47,7 @@ project_<student_full_name>/
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install the required packages:
+4. Install the required packages:
 
    ```bash
    pip install -r requirements.txt
