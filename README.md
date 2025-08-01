@@ -2,7 +2,7 @@
 
 This project implements an anomaly detection system using a PyTorch autoencoder trained on the MNIST dataset. It follows the structure outlined in the [Medium tutorial by Benjamin](https://benjoe.medium.com/anomaly-detection-using-pytorch-autoencoder-and-mnist-31c5c2186329).
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 project_<student_full_name>/
@@ -21,7 +21,7 @@ project_<student_full_name>/
 └── README.md
 ```
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -53,7 +53,7 @@ project_<student_full_name>/
    pip install -r requirements.txt
    ```
 
-## 🧠 Usage
+##  Usage
 
 To train the model and perform anomaly detection:
 
@@ -69,16 +69,16 @@ This will:
 * Evaluate the model on the anomaly dataset.
 * Output performance metrics such as Accuracy and AUC.
 
-## 📊 Outputs
+##  Outputs
 
 * **Model Weights**: Saved in `checkpoints/final_weights.pth`.
 * **Performance Metrics**: Displayed in the console after evaluation.
 
-## 📝 Notes
+##  Notes
 
 * Ensure that the `data/` directory contains the `mnist_train.csv` and `anom.csv` files.
 * The `config.py` file contains configurable parameters such as learning rate, batch size, and number of epochs.
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
